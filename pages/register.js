@@ -5,8 +5,7 @@ import pocketbase from '../lib/pocketbase';
 export default function Register() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    // --- CHANGE: Set the default role to the capitalized version ---
-    const [role, setRole] = useState('Applicant'); 
+    const [role, setRole] = useState('Applicant');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
@@ -24,24 +23,28 @@ export default function Register() {
 
         try {
             // 1. Create the user in the 'users' collection
-            const newUser = await pocketbase.collection('users').create({
+            await pocketbase.collection('users').create({
                 email,
                 password,
                 passwordConfirm: password,
             });
 
-            // 2. Create the corresponding profile in the 'profiles' collection
+            // 2. IMPORTANT: Manually authenticate the new user
+            await pocketbase.collection('users').authWithPassword(email, password);
+
+            // 3. Create the corresponding profile in the 'profiles' collection
+            //    The user is now authenticated, so this request will pass the API rule.
             await pocketbase.collection('profiles').create({
-                userID: newUser.id,
-                role: role, // This will now send the correctly capitalized value
+                userID: pocketbase.authStore.model.id, // Use the ID from the auth store
+                role: role,
             });
 
-            // 3. Redirect to login page on success
-            router.push('/login?message=Registration successful, please log in.');
+            // 4. Redirect to the portal on success
+            router.push('/portal');
 
         } catch (err) {
-            console.error(err);
-            setError('Registration failed. Please check the console for details.');
+            console.error("Registration Error:", err);
+            setError(err.data?.message || err.message || 'An unknown error occurred.');
         } finally {
             setIsLoading(false);
         }
@@ -73,7 +76,6 @@ export default function Register() {
                     onChange={(e) => setRole(e.target.value)}
                     style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
                 >
-                    {/* --- CHANGE: Update the option values to be capitalized --- */}
                     <option value="Applicant">Applicant</option>
                     <option value="Company">Company</option>
                     <option value="Recruiter">Recruiter</option>

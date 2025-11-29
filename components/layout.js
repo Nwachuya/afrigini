@@ -25,11 +25,15 @@ const Layout = ({ children }) => {
                 </Link>
                 <nav>
                     {isLoggedIn ? (
-                        <button onClick={handleLogout}>Logout</button>
+                        <>
+                            <Link href="/portal" style={{ marginRight: '1rem' }}>Portal</Link>
+                            <Link href="/jobs" style={{ marginRight: '1rem' }}>Jobs</Link>
+                            <button onClick={handleLogout}>Logout</button>
+                        </>
                     ) : (
                         <>
-                            <Link href="/login">Login</Link>
-                            <Link href="/register" style={{ marginLeft: '1rem' }}>Register</Link>
+                            <Link href="/login" style={{ marginRight: '1rem' }}>Login</Link>
+                            <Link href="/register">Register</Link>
                         </>
                     )}
                 </nav>

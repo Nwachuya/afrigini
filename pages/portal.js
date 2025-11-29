@@ -1,64 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import pocketbase from '../lib/pocketbase';
+import Link from 'next/link';
 
 export default function Portal() {
-    const [jobs, setJobs] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
         // Redirect if not logged in
         if (!pocketbase.authStore.isValid) {
             router.push('/login');
-            return;
         }
-
-        const fetchJobs = async () => {
-            try {
-                const records = await pocketbase.collection('jobs').getFullList({
-                    sort: '-created',
-                    expand: 'company',
-                });
-                setJobs(records);
-            } catch (error) {
-                console.error("Failed to fetch data:", error);
-                if (error.status === 401) { // Unauthorized
-                    pocketbase.authStore.clear();
-                    router.push('/login');
-                }
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchJobs();
     }, [router]);
 
-    if (isLoading) {
-        return <p>Loading...</p>;
-    }
+    const user = pocketbase.authStore.model;
 
     return (
         <div>
-            <h1>Job Portal</h1>
-            <p>Welcome, {pocketbase.authStore.model?.email}</p>
-            
-            <hr style={{ margin: '20px 0' }} />
-
-            <h2>Available Jobs</h2>
-            {jobs.length === 0 ? (
-                <p>No jobs available at the moment.</p>
-            ) : (
-                <ul>
-                    {jobs.map((job) => (
-                        <li key={job.id} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '10px', listStyle: 'none' }}>
-                            <h3>{job.role}</h3>
-                            <p><strong>Company:</strong> {job.expand?.company?.company || 'N/A'}</p>
-                        </li>
-                    ))}
-                </ul>
-            )}
+            <h1>Welcome to Your Portal</h1>
+            <p>
+                You are logged in as <strong>{user?.email}</strong>.
+            </p>
+            <div style={{ marginTop: '20px' }}>
+                <Link href="/jobs">
+                    <button style={{ padding: '10px 20px', fontSize: '16px' }}>View All Jobs</button>
+                </Link>
+            </div>
         </div>
     );
 }

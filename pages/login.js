@@ -9,12 +9,14 @@ export default function Login() {
     const [error, setError] = useState('');
     const router = useRouter();
 
-    // If user is already logged in, redirect to portal
+    // If user is already logged in, redirect to portal or the intended page
     useEffect(() => {
         if (pocketbase.authStore.isValid) {
-            router.push('/portal');
+            // Check if there's a redirect query parameter
+            const redirectUrl = router.query.redirect || '/portal';
+            router.push(redirectUrl);
         }
-    }, []);
+    }, [router]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -23,7 +25,9 @@ export default function Login() {
 
         try {
             await pocketbase.collection('users').authWithPassword(email, password);
-            router.push('/portal');
+            // After successful login, redirect to the intended page
+            const redirectUrl = router.query.redirect || '/portal';
+            router.push(redirectUrl);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -32,11 +36,13 @@ export default function Login() {
     };
 
     return (
+        // ... (the rest of your login form JSX remains the same)
         <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px' }}>
             <h1>Login</h1>
             {router.query.message && <p style={{ color: 'green' }}>{router.query.message}</p>}
             <form onSubmit={handleSubmit}>
-                <input
+                {/* ... inputs ... */}
+                 <input
                     type="email"
                     placeholder="Email"
                     value={email}
