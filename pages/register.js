@@ -5,7 +5,8 @@ import pocketbase from '../lib/pocketbase';
 export default function Register() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('applicant');
+    // --- CHANGE: Set the default role to the capitalized version ---
+    const [role, setRole] = useState('Applicant'); 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
@@ -14,6 +15,12 @@ export default function Register() {
         e.preventDefault();
         setIsLoading(true);
         setError('');
+
+        if (password.length < 8) {
+            setError('Password must be at least 8 characters long.');
+            setIsLoading(false);
+            return;
+        }
 
         try {
             // 1. Create the user in the 'users' collection
@@ -26,14 +33,15 @@ export default function Register() {
             // 2. Create the corresponding profile in the 'profiles' collection
             await pocketbase.collection('profiles').create({
                 userID: newUser.id,
-                role: role,
+                role: role, // This will now send the correctly capitalized value
             });
 
             // 3. Redirect to login page on success
             router.push('/login?message=Registration successful, please log in.');
 
         } catch (err) {
-            setError(err.message);
+            console.error(err);
+            setError('Registration failed. Please check the console for details.');
         } finally {
             setIsLoading(false);
         }
@@ -53,10 +61,11 @@ export default function Register() {
                 />
                 <input
                     type="password"
-                    placeholder="Password"
+                    placeholder="Password (min. 8 characters)"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    minLength={8}
                     style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
                 />
                 <select
@@ -64,9 +73,10 @@ export default function Register() {
                     onChange={(e) => setRole(e.target.value)}
                     style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
                 >
-                    <option value="applicant">Applicant</option>
-                    <option value="company">Company</option>
-                    <option value="recruiter">Recruiter</option>
+                    {/* --- CHANGE: Update the option values to be capitalized --- */}
+                    <option value="Applicant">Applicant</option>
+                    <option value="Company">Company</option>
+                    <option value="Recruiter">Recruiter</option>
                 </select>
                 {error && <p style={{ color: 'red' }}>{error}</p>}
                 <button type="submit" disabled={isLoading} style={{ width: '100%', padding: '10px' }}>
